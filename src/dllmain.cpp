@@ -3,11 +3,9 @@
 // thread (evita loader-lock). Exportamos onLoad() com guarda, caso um loader
 // mais novo o chame.
 //
-// >>> Este arquivo ainda NÃO instala a injeção. O próximo passo (E0) implementa
-//     a code-cave/hook. Por ora, ele apenas: acha os sites por AOB, loga
-//     endereço/nº de candidatos e o experimento selecionado. Isso já valida,
-//     in-game, que a DLL carrega, que o scanner acha os pontos no build atual e
-//     confirma OQ-T1 (DllMain vs onLoad). É a primeira medição real.
+// Fluxo: acha os sites por AOB (loga endereço/nº de candidatos), aplica o
+// experimento selecionado no .cfg (ver experiment.h/inject.h) e, se instalou
+// caves, sobe um monitor que loga os contadores de execução delas.
 #include <windows.h>
 #include <atomic>
 #include "log.h"
@@ -40,7 +38,7 @@ DWORD WINAPI worker(LPVOID) {
     Sleep(100);
 
   scr::Experiment exp = scr::read_experiment();
-  SCR_INFO("SkippableCutscenesRevival - probe. Alvo testado: %s. Experimento: %s",
+  SCR_INFO("SkippableCutscenesRevival. Alvo testado: %s. Experimento: %s",
            scr::sig::GAME_VERSION_TESTED, scr::experiment_name(exp));
   report_site("execute_skip (P1)", scr::sig::SIG_EXECUTE_SKIP,
               scr::sig::RET_OFF_EXECUTE_SKIP);
@@ -48,6 +46,7 @@ DWORD WINAPI worker(LPVOID) {
               scr::sig::RET_OFF_SHOW_PROMPT);
   scr::apply_experiment(exp);
   SCR_INFO("DONE.");
+  if (!scr::caves().empty()) scr::cave_monitor(nullptr);  // nunca retorna
   return 0;
 }
 }  // namespace

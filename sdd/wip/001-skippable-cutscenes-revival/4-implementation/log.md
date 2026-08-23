@@ -61,3 +61,23 @@ removida. Jogável com o skip (com o disconnect conhecido). Nossa DLL fica em
   Se sumir → algum mod causa, e E1 foi nocivo; abordagem mais segura no E2.
 - Bloqueio operacional: jogo estava aberto (DLL travada) — trocar arquivos só
   com o jogo fechado.
+
+## 2026-08-23 — E1 de verdade (flag +0x4D3), após reler o E1 de 18/08
+- Diagnóstico: o "E1" de 18/08 **não era o E1 da spec**. Ele trocou o `jne`
+  por `jmp` em P2+7 (força o caminho do prompt), mas a rotina que executa o
+  skip (P1) continuou lendo `+0x4D3 == 0` e saindo sem pular → "não pulou" era
+  esperado. A hipótese da spec (setar a flag no objeto) nunca foi testada.
+- Implementado agora (`src/cave.h` + `src/inject.h`): code-caves genéricas
+  (aloca a ±2 GB, `jmp rel32`, contador de execuções por cave, monitor que
+  loga os contadores a cada 2 s) e o E1 correto: cave em **P2** e em **P1**
+  gravando `mov byte [this+4D3h], 1` logo antes da checagem nativa, re-executa
+  a instrução original e volta. Nenhum seek nosso: toda cena passa a ser
+  tratada pelo jogo como nativamente pulável (prompt + skip nativos).
+- Expectativa: se a rotina nativa de skip trata áudio/sessão (como nas cenas
+  já puláveis), some o **áudio órfão** (ponto levantado pelo usuário hoje) e
+  o disconnect — mesma raiz.
+- Encodings verificados com `as`/`objdump`. Build OK. Instalado via
+  `deploy.sh probe` + `cfg E1` (original → `CutsceneSkip.dll.disabled`).
+- Aguardando teste in-game: prompt aparece em cena de história? pula? áudio
+  para? continua online? crash? Log deve mostrar `cave[0]` (P2, por frame,
+  centenas/milhares) e `cave[1]` (P1, ≥1 ao pular).
