@@ -1,0 +1,22 @@
+# Binários de terceiros (mod original do Nexus) — só para análise local, não versionar
+reference/original-mod/*
+!reference/original-mod/README.md
+!reference/original-mod/ANALYSIS.md
+
+# Build
+build/
+out/
+*.dll
+*.pdb
+*.obj
+*.o
+*.exp
+*.lib
+*.ilk
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store
